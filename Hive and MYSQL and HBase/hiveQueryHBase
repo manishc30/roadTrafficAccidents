@@ -1,0 +1,57 @@
+
+
+Hive table creation query:
+
+
+create table if not exists ukAccident(id int, accIndex string, loceast string, locnorth string, longitude string ,latitude string ,policeforce string, accSeverity string, noOfVehicles int, noOfCasualties int, dateOfAcc string, dayOfWeek string, time string, district string, highway string, x1roadclass string, x1roadnumber string, roadType string, speedLimit string, junctionDetail string, junctionControl string, x2roadclass string, x2roadnumber string, humancontrol string, physicalFacilities string, lighConditions string, weatherConditions string, roadConditions string, specialConditions string, carriageWayHazards string, urbanOrRural string, officeAttended string, lsoaAccidentLoc string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\054';
+
+
+
+Hive table loading from HDFS:
+1. LOAD DATA INPATH '/sqoop/ukAccidentCasuality/part-m-00000' into table ukAccidentCasuality;
+
+2. LOAD DATA INPATH '/sqoop/ukAccidents/part-m-00000' into table ukAccidents;
+
+3. LOAD DATA INPATH '/sqoop/ukVehicles/part-m-00000' into table ukVehicles;
+
+
+
+Query to find out how many accidents took place in Urbal and Rural areas.
+Hive Query 1:
+INSERT OVERWRITE DIRECTORY '/usr/hive/warehouse/ukHive1' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE select ukvehicle.gender,ukaccidentcasualty.gender,count(ukaccident.noofcasualties) from ukAccident join ukVehicle on(ukaccident.accindex = ukvehicle.accindex) JOIN ukaccidentcasualty ON(ukaccidentcasualty.accindex = ukVehicle.accindex) group by ukvehicle.gender, ukaccidentcasualty.gender;
+
+Hive Query 2:
+INSERT OVERWRITE DIRECTORY '/usr/hive/warehouse/ukHive2' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE select ukaccident.urbanorrural,count(urbanorrural) from ukaccident join ukVehicle on(ukAccident.accindex = ukVehicle.accindex) JOIN ukaccidentcasualty ON(ukaccidentcasualty.accindex = ukVehicle.accindex) group by urbanorrural;
+
+Hive Query 3:
+Query to find out the casuality class, average age of casuality and number of casualities.
+INSERT OVERWRITE DIRECTORY '/usr/hive/warehouse/ukHive3' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE select ukaccidentcasualty.casualityclass, round(avg(ukaccidentcasualty.age),0), count(ukaccidentcasualty.casualityclass) from ukaccidentcasualty join ukvehicle on(ukAccidentcasualty.accindex = ukvehicle.accindex) join ukaccident on(ukaccident.accindex = ukvehicle.accindex) group by ukaccidentcasualty.casualityclass;
+
+Creating table in HBase
+create 'hive1','colfam1','colfam2','colfam3'
+
+Query to Store hive output query 1 on Hbase
+hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator="," -Dimporttsv.columns=HBASE_ROW_KEY,colfam1,colfam2,colfam2 hive1 hdfs://localhost:54310/usr/hive/warehouse/hive1/000000_0
+
+
+create 'hbaseOutput2','colfam1','colfam2'
+
+Query to store the output file from HDFS to HBase table
+hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator="," -Dimporttsv.columns=HBASE_ROW_KEY,colfam1,colfam2 hiveOutput2 hdfs://localhost:54310/usr/hive/warehouse/hive2/000000_0
+
+
+create 'hbaseOutput3','colfam1','colfam2','colfam3'
+
+hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator="," -Dimporttsv.columns=HBASE_ROW_KEY,colfam1,colfam2,colfam3 hiveOutput3 hdfs://localhost:54310/usr/hive/warehouse/hive3/000000_0
+
+sqoop import --connect jdbc:mysql://127.0.0.1/ukAccidents--username root--password Projectq@12--table hiveOutput1 -m 1--hbase-create-table--hbase-table hiveOutput1--column-family sample--hbase-row-key id--bindir /usr/local/sqoop/
+
+
+
+Sqoop command to store the hive output from hdfs to mysql
+sqoop export -connect jdbc:mysql://localhost/ukAccidents -username root -password Projectq@12 -table hiveOutput1 -export-dir /usr/hive/warehouse/ukHive1/000000_0
+
+
+Running command
+sqoop import --connect jdbc:mysql://127.0.0.1/ukAccidents --username root --password Projectq@12 --table hiveOutput1 -m 1 --hbase-create-table --hbase-table hiveOutput1 --column-family sample --hbase-row-key id
+

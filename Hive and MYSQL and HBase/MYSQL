@@ -1,0 +1,24 @@
+Data Download Commands:
+1. wget -O UK_Accidents_2017.zip http://data.dft.gov.uk.s3.amazonaws.com/road-accidents-safety-data/dftRoadSafetyData_Accidents_2017.zip
+2. wget -O UK_Casualities_2017.zip http://data.dft.gov.uk.s3.amazonaws.com/road-accidents-safety-data/dftRoadSafetyData_Casualties_2017.zip
+3. wget -O UK_Vehicles_2017.zip http://data.dft.gov.uk.s3.amazonaws.com/road-accidents-safety-data/dftRoadSafetyData_Vehicles_2017.zip
+
+Unzip data files:
+
+1. unzip UK_Accidents_2017.zip
+2. unzip UK_Casualities_2017.zip
+3. unzip UK_Vehicles_2017.zip
+
+
+MYSQL Table Creation:
+1. create table ukAccidents(id int auto_increment primary key,accIndex varchar(255), locEast varchar(255), locNorth varchar(255), longitude varchar(255), latitude varchar(255), policeForce varchar(255), accSeverity varchar(255), noOfVehicles int, noOfCasualities int, date varchar(255), dayOfWeek varchar(255), time varchar(255), district varchar(255), highway varchar(255), X1RoadClass varchar(255), X1RoadNumber varchar(255), roadType varchar(255), speedLimit varchar(255), junctionDetail varchar(255), junctionControl varchar(255), X2RoadClass varchar(255), X2RoadNumber varchar(255), humanControl varchar(255), physicalFacilities varchar(255), lightCOnditions varchar(255), weatherConditions varchar(255), roadConditions varchar(255), specialConditions varchar(255), carriagewayHazards varchar(255), urbanOrRural varchar(255), officerAttended varchar(255), LSOAAccidentLoc varchar(255));
+
+
+MYSQL table loading from files:
+1. LOAD DATA LOCAL INFILE '/home/hduser/Desktop/PFDA-VM-Share/sf_PFDA_VM_Share/PFDA_Project/Accidents.csv' into table ukAccidents COLUMNS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+2. LOAD DATA LOCAL INFILE '/home/hduser/Desktop/PFDA-VM-Share/sf_PFDA_VM_Share/PFDA_Project/Cas.csv' into table ukVehicles COLUMNS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+3.LOAD DATA LOCAL INFILE '/home/hduser/Desktop/PFDA-VM-Share/sf_PFDA_VM_Share/PFDA_Project/Veh.csv' into table ukAccidentCasuality COLUMNS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+
